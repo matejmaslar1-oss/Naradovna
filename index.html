@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Náraďovňa</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#15171A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Náraďovňa">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+  :root{
+    --bg:#DCDDDE; --panel:#FFFFFF; --ink:#15171A; --muted:#697079;
+    --amber:#F0B429; --line:#C4C7CA; --danger:#B03A2E; --ok:#2E7D5B;
+    --pad:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    font-size:17px; line-height:1.45;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  header{
+    background:var(--ink); color:#F3F2F0;
+    padding:calc(env(safe-area-inset-top) + 14px) var(--pad) 14px;
+    display:flex; align-items:baseline; gap:10px;
+    position:sticky; top:0; z-index:20;
+  }
+  header h1{font-size:19px;font-weight:650;letter-spacing:-.2px;margin:0}
+  header .bar{width:22px;height:3px;background:var(--amber);border-radius:2px;align-self:center}
+  header .ver{font-size:12px;color:#8A9099;font-family:ui-monospace,Menlo,monospace}
+  header .net{margin-left:auto;font-size:12px;color:#9AA0A8}
+  header .net.off{color:var(--amber)}
+  main{padding:var(--pad);max-width:640px;margin:0 auto}
+  h2{font-size:15px;font-weight:600;color:var(--muted);margin:0 0 10px}
+  .row{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    display:flex; align-items:center; gap:12px; padding:10px;
+    margin-bottom:8px; text-decoration:none; color:inherit;
+  }
+  .row:active{background:#F1F1F0}
+  .thumb{
+    width:56px;height:56px;border-radius:8px;object-fit:cover;flex:none;
+    background:#E3E4E5; border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px
+  }
+  .row .meta{min-width:0;flex:1}
+  .row .meta b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .meta span{display:block;font-size:14px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:var(--muted)}
+  button,.btn{
+    font:inherit;font-weight:600;border-radius:10px;border:1px solid var(--ink);
+    background:var(--ink);color:#fff;padding:13px 16px;width:100%;
+    display:block;text-align:center;text-decoration:none;cursor:pointer;margin-bottom:10px;
+  }
+  .btn.amber{background:var(--amber);border-color:#D9A11C;color:#1A1508}
+  .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn.danger{background:transparent;color:var(--danger);border-color:var(--danger)}
+  button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+  label{display:block;font-size:14px;font-weight:600;color:var(--muted);margin:14px 0 5px}
+  input,textarea{
+    font:inherit;width:100%;padding:12px;border:1px solid var(--line);
+    border-radius:10px;background:var(--panel);color:var(--ink)
+  }
+  textarea{min-height:110px;resize:vertical}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+  .photo{width:100%;border-radius:10px;display:block;border:1px solid var(--line)}
+  .empty{text-align:center;color:var(--muted);padding:34px 10px}
+  .qrbox{background:#fff;padding:12px;border-radius:10px;display:inline-block;border:1px solid var(--line)}
+  .qrbox canvas,.qrbox img{display:block}
+  .labels{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .label{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;break-inside:avoid}
+  .label small{display:block;font-size:12px;font-weight:600;margin-top:6px;word-break:break-word}
+  .label canvas,.label img{max-width:100%;height:auto}
+  .note{font-size:14px;color:var(--muted);margin:0 0 14px}
+  .url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;word-break:break-all;
+       background:#F2F2F1;border:1px solid var(--line);border-radius:8px;padding:10px;color:#3A3F45}
+  .hide{display:none!important}
+  dl{margin:0}
+  dt{font-size:13px;color:var(--muted);margin-top:12px}
+  dd{margin:2px 0 0;font-weight:500;white-space:pre-wrap}
+  @media print{
+    header,.noprint{display:none!important}
+    body{background:#fff}
+    main{padding:0;max-width:none}
+    .labels{grid-template-columns:1fr 1fr 1fr}
+  }
+</style>
+</head>
+<body>
+<header>
+  <span class="bar"></span>
+  <h1>Náraďovňa</h1><span class="ver">v3</span>
+  <span class="net" id="net"></span>
+</header>
+<main id="app"></main>
+
+<script>
+/* ---------- úložisko ---------- */
+const DB='naradovna', STORE='tools';
+function openDb(){return new Promise((res,rej)=>{
+  const r=indexedDB.open(DB,1);
+  r.onupgradeneeded=()=>{const d=r.result; if(!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE,{keyPath:'id'});};
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+});}
+async function all(){const d=await openDb();return new Promise((res,rej)=>{const q=d.transaction(STORE).objectStore(STORE).getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error);});}
+async function get(id){const d=await openDb();return new Promise((res,rej)=>{const q=d.transaction(STORE).objectStore(STORE).get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error);});}
+async function put(o){const d=await openDb();return new Promise((res,rej)=>{const t=d.transaction(STORE,'readwrite');t.objectStore(STORE).put(o);t.oncomplete=()=>res(o);t.onerror=()=>rej(t.error);});}
+async function del(id){const d=await openDb();return new Promise((res,rej)=>{const t=d.transaction(STORE,'readwrite');t.objectStore(STORE).delete(id);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);});}
+
+/* ---------- pomocné ---------- */
+const AB='ACDEFGHJKLMNPQRTUVWXY34679';
+function newId(){let s='';for(let i=0;i<5;i++)s+=AB[Math.floor(Math.random()*AB.length)];return s;}
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const baseUrl=()=>location.href.split('#')[0];
+const toolUrl=id=>baseUrl()+'#/t/'+id;
+const app=document.getElementById('app');
+const go=h=>{location.hash=h;};
+
+/* admin zámok – jednoduchá ochrana pred cudzím zásahom, nie šifrovanie */
+const pin=()=>localStorage.getItem('nrd_pin')||'';
+let unlocked=sessionStorage.getItem('nrd_ok')==='1';
+function admin(){
+  if(!pin()) return true;
+  if(unlocked) return true;
+  const v=prompt('Zadaj admin PIN:');
+  if(v===null) return false;
+  if(v===pin()){unlocked=true;sessionStorage.setItem('nrd_ok','1');return true;}
+  alert('Nesprávny PIN.');return false;
+}
+
+/* kopírovanie do schránky */
+const canNFC = ('NDEFReader' in window);
+async function copyText(text, btn){
+  const done = () => { if(!btn) return; const o=btn.textContent; btn.textContent='Skopírované'; setTimeout(()=>btn.textContent=o,1400); };
+  try{
+    if(navigator.clipboard && isSecureContext){ await navigator.clipboard.writeText(text); done(); return; }
+    throw new Error('no clipboard');
+  }catch(e){
+    const i=document.createElement('input');
+    i.value=text; i.setAttribute('readonly','');
+    i.style.cssText='position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(i); i.select(); i.setSelectionRange(0,99999);
+    let ok=false; try{ ok=document.execCommand('copy'); }catch(_){}
+    document.body.removeChild(i);
+    if(ok) done(); else prompt('Skopíruj odkaz ručne:', text);
+  }
+}
+
+/* zápis na NFC – len Chrome/Android, na iPhone sa tlačidlo nezobrazí */
+async function writeNFC(url, btn){
+  if(!canNFC) return;
+  const o=btn.textContent;
+  btn.textContent='Prilož čip k telefónu…';
+  try{
+    await new NDEFReader().write({records:[{recordType:'url', data:url}]});
+    btn.textContent='Zapísané na čip';
+  }catch(err){
+    btn.textContent='Zápis zlyhal – skús znova';
+  }
+  setTimeout(()=>btn.textContent=o,2500);
+}
+
+/* stav siete */
+function net(){const e=document.getElementById('net');
+  if(navigator.onLine){e.textContent='online';e.classList.remove('off');}
+  else{e.textContent='offline';e.classList.add('off');}}
+addEventListener('online',net);addEventListener('offline',net);net();
+
+/* ---------- QR ---------- */
+let qrLoading=null;
+function loadQR(){
+  if(window.QRCode) return Promise.resolve(true);
+  if(qrLoading) return qrLoading;
+  qrLoading=new Promise(res=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload=()=>res(true); s.onerror=()=>res(false);
+    document.head.appendChild(s);
+  });
+  return qrLoading;
+}
+async function drawQR(el,text,size){
+  const ok=await loadQR();
+  el.innerHTML='';
+  if(!ok){el.innerHTML='<p class="note">QR sa nepodarilo vygenerovať – pripoj sa raz na internet, potom to už pôjde aj offline.</p>';return null;}
+  new QRCode(el,{text,width:size,height:size,correctLevel:QRCode.CorrectLevel.M});
+  await new Promise(r=>setTimeout(r,60));
+  return el.querySelector('canvas')||el.querySelector('img');
+}
+
+/* ---------- fotka ---------- */
+function shrink(file,max=1100,q=.72){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let{width:w,height:h}=img;
+        const r=Math.min(1,max/Math.max(w,h)); w=Math.round(w*r); h=Math.round(h*r);
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        res(c.toDataURL('image/jpeg',q));
+      };
+      img.onerror=()=>rej(new Error('Obrázok sa nedá načítať.'));
+      img.src=fr.result;
+    };
+    fr.onerror=()=>rej(new Error('Súbor sa nedá načítať.'));
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ---------- obrazovky ---------- */
+async function viewList(){
+  const items=(await all()).sort((a,b)=>a.name.localeCompare(b.name,'sk'));
+  app.innerHTML=`
+    <a class="btn amber" href="#/new">Pridať náradie</a>
+    <h2>${items.length?items.length+' kusov v evidencii':'Evidencia'}</h2>
+    <div id="list"></div>
+    <a class="btn ghost" href="#/labels">Štítky na tlač</a>
+    <a class="btn ghost" href="#/nfc">Odkazy pre NFC čipy</a>
+    <a class="btn ghost" href="#/backup">Záloha a nastavenia</a>`;
+  const list=document.getElementById('list');
+  if(!items.length){
+    list.innerHTML='<div class="empty">Zatiaľ tu nič nie je.<br>Pridaj prvý kus a vytlač si k nemu QR štítok.</div>';
+    return;
+  }
+  list.innerHTML=items.map(t=>`
+    <a class="row" href="#/t/${t.id}">
+      ${t.photo?`<img class="thumb" src="${t.photo}" alt="">`:'<span class="thumb">bez foto</span>'}
+      <span class="meta">
+        <b>${esc(t.name)}</b>
+        <span>${esc(t.place||'—')}</span>
+      </span>
+      <span class="code">${t.id}</span>
+    </a>`).join('');
+}
+
+async function viewDetail(id){
+  const t=await get(id);
+  if(!t){
+    app.innerHTML=`<div class="empty">Náradie s kódom <b>${esc(id)}</b> nie je v tomto zariadení.<br><br>
+      Ak si dáta zadával na inom mobile, nahraj sem zálohu.</div>
+      <a class="btn ghost" href="#/backup">Obnoviť zo zálohy</a>
+      <a class="btn ghost" href="#/">Späť na zoznam</a>`;
+    return;
+  }
+  app.innerHTML=`
+    <div class="card">
+      ${t.photo?`<img class="photo" src="${t.photo}" alt="${esc(t.name)}">`:''}
+      <h2 style="margin:${t.photo?'14px':'0'} 0 0">${t.id}</h2>
+      <div style="font-size:22px;font-weight:650;letter-spacing:-.3px">${esc(t.name)}</div>
+      <dl>
+        ${t.place?`<dt>Umiestnenie</dt><dd>${esc(t.place)}</dd>`:''}
+        ${t.desc?`<dt>Popis</dt><dd>${esc(t.desc)}</dd>`:''}
+        ${t.serial?`<dt>Výrobné číslo</dt><dd>${esc(t.serial)}</dd>`:''}
+      </dl>
+    </div>
+    <div class="card noprint" style="text-align:center">
+      <h2>QR štítok</h2>
+      <div class="qrbox" id="qr"></div>
+      <p class="note" style="margin:12px 0 0">Nalep na náradie. Po naskenovaní sa otvorí táto karta – aj bez signálu.</p>
+      <a class="btn ghost" id="dl" style="margin-top:12px" download="naradie-${t.id}.png">Uložiť QR ako obrázok</a>
+    </div>
+    <div class="card noprint">
+      <h2>Odkaz pre NFC čip</h2>
+      <div class="url" id="u">${esc(toolUrl(t.id))}</div>
+      <button class="btn ghost" id="cp" style="margin-top:12px">Kopírovať odkaz</button>
+      ${canNFC?'<button class="btn amber" id="nfc">Zapísať na NFC čip</button>':
+        '<p class="note" style="margin:0">Zápis na čip iPhone zo stránky nezvládne. Skopíruj odkaz a zapíš ho appkou NFC Tools → Write → URL.</p>'}
+    </div>
+    <a class="btn ghost noprint" href="#/edit/${t.id}">Upraviť</a>
+    <a class="btn ghost noprint" href="#/">Späť na zoznam</a>`;
+  const c=await drawQR(document.getElementById('qr'),toolUrl(t.id),190);
+  const dl=document.getElementById('dl');
+  if(c&&c.tagName==='CANVAS'){dl.href=c.toDataURL('image/png');}
+  else if(c&&c.src){dl.href=c.src;}
+  else{dl.classList.add('hide');}
+  const cp=document.getElementById('cp');
+  cp.addEventListener('click',()=>copyText(toolUrl(t.id),cp));
+  const nb=document.getElementById('nfc');
+  if(nb) nb.addEventListener('click',()=>writeNFC(toolUrl(t.id),nb));
+}
+
+async function viewNfc(){
+  const items=(await all()).sort((a,b)=>a.name.localeCompare(b.name,'sk'));
+  app.innerHTML=`
+    <h2>Odkazy pre NFC čipy</h2>
+    <p class="note">${canNFC
+      ? 'Ťukni na Zapísať a prilož čip k zadnej strane telefónu.'
+      : 'Skopíruj odkaz a v appke NFC Tools daj Write → Add a record → URL → vlož → Write.'}</p>
+    <div id="nlist"></div>
+    <a class="btn ghost" href="#/">Späť na zoznam</a>`;
+  const box=document.getElementById('nlist');
+  if(!items.length){box.innerHTML='<div class="empty">Najprv pridaj náradie.</div>';return;}
+  box.innerHTML=items.map(t=>`
+    <div class="card">
+      <b>${esc(t.name)}</b>
+      <div class="url" style="margin-top:8px">${esc(toolUrl(t.id))}</div>
+      <button class="btn ghost" data-cp="${t.id}" style="margin-top:10px">Kopírovať odkaz</button>
+      ${canNFC?`<button class="btn amber" data-nfc="${t.id}" style="margin-bottom:0">Zapísať na čip</button>`:''}
+    </div>`).join('');
+  box.addEventListener('click',e=>{
+    const c=e.target.closest('[data-cp]');
+    if(c){copyText(toolUrl(c.dataset.cp),c);return;}
+    const n=e.target.closest('[data-nfc]');
+    if(n) writeNFC(toolUrl(n.dataset.nfc),n);
+  });
+}
+
+async function viewEdit(id){
+  if(!admin()){go('#/');return;}
+  const t=id?await get(id):null;
+  if(id&&!t){go('#/');return;}
+  const d=t||{id:newId(),name:'',place:'',desc:'',serial:'',photo:''};
+  app.innerHTML=`
+    <h2>${t?'Úprava – '+d.id:'Nové náradie – '+d.id}</h2>
+    <div class="card">
+      <label for="f_name">Názov</label>
+      <input id="f_name" value="${esc(d.name)}" placeholder="napr. Vŕtacie kladivo Bosch">
+      <label for="f_place">Kde to je</label>
+      <input id="f_place" value="${esc(d.place)}" placeholder="napr. dodávka, polica 2">
+      <label for="f_serial">Výrobné číslo</label>
+      <input id="f_serial" value="${esc(d.serial||'')}" placeholder="nepovinné">
+      <label for="f_desc">Popis</label>
+      <textarea id="f_desc" placeholder="príslušenstvo, stav, dátum servisu…">${esc(d.desc)}</textarea>
+      <label for="f_photo">Fotka</label>
+      <input id="f_photo" type="file" accept="image/*">
+      <div id="prev" style="margin-top:12px">${d.photo?`<img class="photo" src="${d.photo}" alt="">`:''}</div>
+    </div>
+    <button id="save">Uložiť</button>
+    ${t?'<button class="btn danger" id="del">Vymazať náradie</button>':''}
+    <a class="btn ghost" href="${t?'#/t/'+d.id:'#/'}">Zrušiť</a>`;
+
+  let photo=d.photo;
+  document.getElementById('f_photo').addEventListener('change',async e=>{
+    const f=e.target.files[0]; if(!f)return;
+    const prev=document.getElementById('prev');
+    prev.innerHTML='<p class="note">Spracúvam fotku…</p>';
+    try{photo=await shrink(f);prev.innerHTML=`<img class="photo" src="${photo}" alt="">`;}
+    catch(err){prev.innerHTML='<p class="note">Fotku sa nepodarilo načítať. Skús inú.</p>';}
+  });
+
+  document.getElementById('save').addEventListener('click',async()=>{
+    const name=document.getElementById('f_name').value.trim();
+    if(!name){alert('Doplň názov náradia.');return;}
+    await put({
+      id:d.id, name,
+      place:document.getElementById('f_place').value.trim(),
+      serial:document.getElementById('f_serial').value.trim(),
+      desc:document.getElementById('f_desc').value.trim(),
+      photo, updated:new Date().toISOString()
+    });
+    go('#/t/'+d.id);
+  });
+
+  const db=document.getElementById('del');
+  if(db) db.addEventListener('click',async()=>{
+    if(confirm('Naozaj vymazať „'+d.name+'“? Späť sa to nedá.')){await del(d.id);go('#/');}
+  });
+}
+
+async function viewLabels(){
+  const items=(await all()).sort((a,b)=>a.name.localeCompare(b.name,'sk'));
+  app.innerHTML=`
+    <h2 class="noprint">Štítky na tlač</h2>
+    <p class="note noprint">Vytlač alebo odfoť obrazovku. Každý štítok vedie na kartu daného kusu.</p>
+    <div class="labels" id="grid"></div>
+    <a class="btn ghost noprint" href="#/" style="margin-top:14px">Späť na zoznam</a>`;
+  const grid=document.getElementById('grid');
+  if(!items.length){grid.innerHTML='<div class="empty">Najprv pridaj náradie.</div>';return;}
+  for(const t of items){
+    const box=document.createElement('div');
+    box.className='label';
+    const q=document.createElement('div');
+    box.appendChild(q);
+    const s=document.createElement('small');
+    s.textContent=t.name+' · '+t.id;
+    box.appendChild(s);
+    grid.appendChild(box);
+    await drawQR(q,toolUrl(t.id),140);
+  }
+}
+
+async function viewBackup(){
+  const items=await all();
+  app.innerHTML=`
+    <h2>Záloha</h2>
+    <div class="card">
+      <p class="note">Dáta sú uložené len v tomto telefóne. Zálohu si prenesieš na iné zariadenie súborom.</p>
+      <a class="btn ghost" id="exp">Stiahnuť zálohu (${items.length} ks)</a>
+      <label for="imp">Nahrať zálohu</label>
+      <input id="imp" type="file" accept="application/json,.json">
+      <p class="note" style="margin-top:10px">Nahratie pridá alebo prepíše kusy s rovnakým kódom. Ostatné zostanú.</p>
+    </div>
+    <h2>Admin PIN</h2>
+    <div class="card">
+      <p class="note">Chráni pridávanie a mazanie pred cudzími rukami. Nie je to šifrovanie – kto má telefón, dáta si prečíta.</p>
+      <label for="p1">Nový PIN (prázdne = bez zámku)</label>
+      <input id="p1" type="tel" inputmode="numeric" value="${esc(pin())}">
+      <button id="savepin" style="margin-top:12px">Uložiť PIN</button>
+    </div>
+    <h2>Aktualizácia</h2>
+    <div class="card">
+      <p class="note">Ak sa po nahratí nových súborov na GitHub nič nezmenilo, vyhoď uloženú verziu. Náradie ti zostane.</p>
+      <button class="btn ghost" id="upd" style="margin-bottom:0">Načítať najnovšiu verziu</button>
+    </div>
+    <a class="btn ghost" href="#/">Späť na zoznam</a>`;
+
+  document.getElementById('upd').addEventListener('click',async()=>{
+    try{
+      if('serviceWorker' in navigator){
+        const rs=await navigator.serviceWorker.getRegistrations();
+        await Promise.all(rs.map(r=>r.unregister()));
+      }
+      if(window.caches){
+        const ks=await caches.keys();
+        await Promise.all(ks.map(k=>caches.delete(k)));
+      }
+    }catch(e){}
+    location.replace(baseUrl()+'?r='+Date.now());
+  });
+
+  const blob=new Blob([JSON.stringify({app:'naradovna',v:1,items},null,2)],{type:'application/json'});
+  const exp=document.getElementById('exp');
+  exp.href=URL.createObjectURL(blob);
+  exp.download='naradovna-zaloha-'+new Date().toISOString().slice(0,10)+'.json';
+
+  document.getElementById('imp').addEventListener('change',e=>{
+    const f=e.target.files[0]; if(!f)return;
+    const fr=new FileReader();
+    fr.onload=async()=>{
+      try{
+        const data=JSON.parse(fr.result);
+        const arr=Array.isArray(data)?data:data.items;
+        if(!Array.isArray(arr)) throw new Error('zlý formát');
+        let n=0;
+        for(const it of arr){ if(it&&it.id&&it.name){await put(it);n++;} }
+        alert('Nahraných '+n+' kusov.');
+        go('#/');
+      }catch(err){alert('Súbor sa nepodarilo prečítať. Vyber zálohu z tejto appky (.json).');}
+    };
+    fr.readAsText(f);
+  });
+
+  document.getElementById('savepin').addEventListener('click',()=>{
+    const v=document.getElementById('p1').value.trim();
+    if(v)localStorage.setItem('nrd_pin',v);else localStorage.removeItem('nrd_pin');
+    unlocked=true;sessionStorage.setItem('nrd_ok','1');
+    alert(v?'PIN nastavený.':'Zámok vypnutý.');
+  });
+}
+
+/* ---------- router ---------- */
+function route(){
+  const h=location.hash.replace(/^#/,'');
+  scrollTo(0,0);
+  if(h.startsWith('/t/'))return viewDetail(h.slice(3));
+  if(h.startsWith('/edit/'))return viewEdit(h.slice(6));
+  if(h==='/new')return viewEdit(null);
+  if(h==='/labels')return viewLabels();
+  if(h==='/nfc')return viewNfc();
+  if(h==='/backup')return viewBackup();
+  return viewList();
+}
+addEventListener('hashchange',route);
+route();
+
+if('serviceWorker' in navigator){
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
