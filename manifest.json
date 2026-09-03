@@ -1,0 +1,15 @@
+{
+  "name": "Náraďovňa",
+  "short_name": "Náraďovňa",
+  "description": "Evidencia náradia s QR štítkami, funguje aj bez internetu.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#DCDDDE",
+  "theme_color": "#15171A",
+  "lang": "sk",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
